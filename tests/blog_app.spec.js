@@ -2,7 +2,8 @@ const { test, describe, expect, beforeEach } = require('@playwright/test')
 const exp = require('constants')
 // const { request } = require('http')
 // const { before } = require('node:test')
-const { reset, login, resetWithBlogs, createBlog, likeByName } = require('./helper')
+const { reset, login, resetWithBlogs, createBlog, likeBlogByName, removeBlogByName } = require('./helper')
+const { setTimeout } = require('timers')
 // const { before, beforeEach, afterEach } = require('node:test')
 
 describe('Blog app', () => {
@@ -28,7 +29,7 @@ describe('Login', () => {
     })
 
     test('login as valid user', async ({ page }) => {
-        await login(page)
+        await login(page, 'testikäyttäjä', 'salasana')
         await expect(page.getByText(/Logged in as testikäyttäjä/)).toBeVisible()
         await expect(page.getByText(/Welcome, testikäyttäjä/)).toBeVisible()
 
@@ -52,9 +53,9 @@ describe('when logged in', () => {
     })
 
     test('can create blog', async ({ page }) => {
-        await createBlog('Title of blog', page)
+        await createBlog(page, 'Title of blog')
         await expect(page.getByText(/New blog Title of blog created/)).toBeVisible()
-        await expect(page.getByText('Title of blog Author of blog')).toBeVisible()
+        await expect(page.getByText('Title of blog Author of this blog')).toBeVisible()
     })
 
     test('can sign out', async ({ page }) => {
@@ -84,13 +85,20 @@ describe('logged in, many blogs', async () => {
     })
 
     test('can remove own blog', async ({ page }) => {
-        await createBlog('removable', page)
-
-        await expect(page.getByText(/removable Author of blog/)).toBeVisible()
-        await page.getByRole('button', { name: 'view' }).nth(2).click()
+        await createBlog(page, 'removable')
         page.on('dialog', dialog => dialog.accept());
-        await page.getByTestId('deleteBlog').click()
-        await expect(page.getByText(/removable Author of blog/)).not.toBeVisible()
+
+        await expect(page.getByText(/removable Author of this blog/)).toBeVisible()
+        await expect(page.getByText(/Some Blog03 Author of this blog/)).toBeVisible()
+
+        await removeBlogByName(page, 'removable')
+        await expect(page.getByText(/removable Author of this blog/)).not.toBeVisible()
+
+        await page.waitForTimeout(300)
+
+        await removeBlogByName(page, 'Some Blog03')
+        await expect(page.getByText(/Some Blog03 Author of this blog/)).not.toBeVisible()
+
     })
 
     test('cant see deletebutton of others blogs', async ({ page }) => {
@@ -99,12 +107,11 @@ describe('logged in, many blogs', async () => {
         await expect(page.getByTestId('deleteBlog')).not.toBeVisible()
     })
 
-    test.only('blogs arranged by likes', async ({ page }) => {
+    test('blogs arranged by likes', async ({ page }) => {
 
-        await likeByName(page, 'Some Blog03')
-        await likeByName(page, 'Some Blog02')
-        await likeByName(page, 'Some Blog02')
-
+        await likeBlogByName(page, 'Some Blog03')
+        await likeBlogByName(page, 'Some Blog02')
+        await likeBlogByName(page, 'Some Blog02')
         const blogsLocators = page.locator('div.blog >> div')
         const texts = await blogsLocators.allTextContents()
         const expectedOrder = [
@@ -115,42 +122,3 @@ describe('logged in, many blogs', async () => {
         expect(texts).toStrictEqual(expectedOrder)
     })
 })
-
-/* 5.17:
-Tee testi, joka varmistaa, että sovellus näyttää oletusarvoisesti kirjautumislomakkeen.
-DONE: login form in front page
-
-5.18:
-Tee testit kirjautumiselle. 
-Testaa sekä onnistunut että epäonnistunut kirjautuminen. 
-Luo testejä varten käyttäjä beforeEach-lohkossa. 
-DONE: describe login
-
-5.19:
-
-Tee testi, joka varmistaa, että kirjautunut käyttäjä pystyy luomaan blogin.
-DONE
-
-5.20:
-Tee testi, joka varmistaa, että blogia voi likettää.
-DONE
-
-5.21:
-Tee testi, joka varmistaa, että blogin lisännyt käyttäjä voi poistaa blogin. 
-Jos käytät poisto-operaation yhteydessä window.confirm-dialogia, 
-saatat joutua hieman etsimään 
-miten dialogin käyttö tapahtuu Playwright-testeistä käsin.
-DONE
-
-5.22:
-Tee testi, joka varmistaa, että 
-vain blogin lisännyt käyttäjä näkee blogin poistonapin.
-DONE
-
-5.23:
-Tee testi, joka varmistaa, että blogit järjestetään
-likejen mukaiseen järjestykseen, eniten likejä saanut blogi ensin.
-
-Tämä tehtävä on edellisiä huomattavasti haastavampi.
-DONE
-*/

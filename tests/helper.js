@@ -54,11 +54,26 @@ const createBlog = async (page, title) => {
 //     await page.getByRole('button', { name: 'like' }).click();
 // }
 
-const likeByName = async (page, blogName) => {
-    await page.locator('div.blog').locator(`:text("${blogName}")`).locator('..').locator('button').click()
-    // ylläoleva sijainti suomeksi: div.blog >> : text("${blogName}") >> .. >> button
+const likeBlogByName = async (page, blogName) => {
+    await findBlogByName(page, blogName).locator('button').click()
     await page.getByRole('button', { name: 'like' }).click();
     await page.getByTestId('hideBlog').click()
 }
+/* removeBlogByName vaatii rivin: 
+    page.on('dialog', dialog => dialog.accept());
+mutta se pitää olla siellä missä tätä kutsutaan,
+koska vain niin tätä voi kutsua useamman kerran.
+Jos se on täällä sisällä,
+se valittaa että ei voi hyväksyä dialogia joka on jo hyväksytty. */
+const removeBlogByName = async (page, blogName) => {
+    await findBlogByName(page, blogName).locator('button').click()
+    await page.getByTestId('deleteBlog').click()
+}
 
-module.exports = { reset, login, resetWithBlogs, createBlog, likeByName };
+const findBlogByName = (page, blogName) => {
+    return page.locator('div.blog').locator(`:text("${blogName}")`).locator('..')
+    // ylläoleva sijainti suomeksi: div.blog >> : text("${blogName}") >> ..
+
+}
+
+module.exports = { reset, login, resetWithBlogs, createBlog, likeBlogByName, removeBlogByName };
