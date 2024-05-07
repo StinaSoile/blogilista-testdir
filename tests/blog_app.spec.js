@@ -1,10 +1,7 @@
 const { test, describe, expect, beforeEach } = require('@playwright/test')
 const exp = require('constants')
-// const { request } = require('http')
-// const { before } = require('node:test')
 const { reset, login, resetWithBlogs, createBlog, likeBlogByName, removeBlogByName } = require('./helper')
 const { setTimeout } = require('timers')
-// const { before, beforeEach, afterEach } = require('node:test')
 
 describe('Blog app', () => {
     beforeEach(async ({ page }) => {
