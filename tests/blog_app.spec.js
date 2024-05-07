@@ -1,7 +1,5 @@
 const { test, describe, expect, beforeEach } = require('@playwright/test')
-const exp = require('constants')
 const { reset, login, resetWithBlogs, createBlog, likeBlogByName, removeBlogByName } = require('./helper')
-const { setTimeout } = require('timers')
 
 describe('Blog app', () => {
     beforeEach(async ({ page }) => {
