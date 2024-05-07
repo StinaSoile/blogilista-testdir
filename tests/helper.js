@@ -22,45 +22,43 @@ const resetWithBlogs = async ({ page, request }) => {
     await reset(request)
 
     await page.goto('http://localhost:5173')
-    // await page.pause()
-    await login2(page)
-    await createBlog('Blog01', page)
-    await createBlog('Blog02', page)
+    await login(page, 'testikäyttäjä2', 'salasana2')
+    await createBlog(page, 'Some Blog01')
+    await createBlog(page, 'Some Blog02')
+    await page.getByTestId('logout').click()
+    await login(page, 'testikäyttäjä', 'salasana')
+    await createBlog(page, 'Some Blog03')
     await page.getByTestId('logout').click()
 
 }
-/*
-TAVOITE: 
-Luo kaksi käyttäjää, ota talteen ne kun reqponse palauttaa ne.
-Luo < 5 blogia joilla kaksi eri käyttäjää usereina.
-Tee tästä resetWithBlogs
-*/
 
-const login = async (page) => {
-    await page.getByTestId('username').fill('testikäyttäjä')
-    await page.getByTestId('password').fill('salasana')
-    await page.getByRole('button', { name: 'login' }).click()
-}
-const login2 = async (page) => {
-    await page.getByTestId('username').fill('testikäyttäjä2')
-    await page.getByTestId('password').fill('salasana2')
+const login = async (page, user, password) => {
+    await page.getByTestId('username').fill(user)
+    await page.getByTestId('password').fill(password)
     await page.getByRole('button', { name: 'login' }).click()
 }
 
-const createBlog = async (title, page) => {
+const createBlog = async (page, title) => {
     // await page.pause()
     await page.getByRole('button', { name: 'new blog' }).click()
     await page.getByTestId('title').fill(title)
-    await page.getByTestId('author').fill('Author of blog')
+    await page.getByTestId('author').fill('Author of this blog')
     await page.getByTestId('url').fill('Url of blog')
     await page.getByTestId('createbutton').click()
     await page.getByTestId('canceltoggle').click()
 
 }
 
-const like = async (nth, page) => {
-    await page.locator('.blog > button').nth(nth).click();
+// const like = async (nth, page) => {
+//     await page.locator('.blog > button').nth(nth).click();
+//     await page.getByRole('button', { name: 'like' }).click();
+// }
+
+const likeByName = async (page, blogName) => {
+    await page.locator('div.blog').locator(`:text("${blogName}")`).locator('..').locator('button').click()
+    // ylläoleva sijainti suomeksi: div.blog >> : text("${blogName}") >> .. >> button
     await page.getByRole('button', { name: 'like' }).click();
+    await page.getByTestId('hideBlog').click()
 }
 
-module.exports = { reset, login, resetWithBlogs, createBlog, like };
+module.exports = { reset, login, resetWithBlogs, createBlog, likeByName };

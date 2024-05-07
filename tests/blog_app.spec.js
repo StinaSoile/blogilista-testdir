@@ -2,7 +2,7 @@ const { test, describe, expect, beforeEach } = require('@playwright/test')
 const exp = require('constants')
 // const { request } = require('http')
 // const { before } = require('node:test')
-const { reset, login, resetWithBlogs, createBlog, like } = require('./helper')
+const { reset, login, resetWithBlogs, createBlog, likeByName } = require('./helper')
 // const { before, beforeEach, afterEach } = require('node:test')
 
 describe('Blog app', () => {
@@ -48,7 +48,7 @@ describe('when logged in', () => {
         await reset(request)
         await page.goto('http://localhost:5173')
 
-        await login(page)
+        await login(page, 'testikäyttäjä', 'salasana')
     })
 
     test('can create blog', async ({ page }) => {
@@ -73,11 +73,13 @@ describe('logged in, many blogs', async () => {
         await resetWithBlogs({ page, request })
         await page.goto('http://localhost:5173')
 
-        await login(page)
+        await login(page, 'testikäyttäjä', 'salasana')
     })
 
     test('can like blog', async ({ page }) => {
-        await like(0, page)
+        await page.locator('.blog > button').first().click();
+        await page.getByRole('button', { name: 'like' }).click();
+
         await expect(page.getByRole('cell', { name: '1 like' })).toBeVisible()
     })
 
@@ -98,22 +100,21 @@ describe('logged in, many blogs', async () => {
     })
 
     test.only('blogs arranged by likes', async ({ page }) => {
-        await createBlog('Blog03', page)
-        await like(1, page)
-        await page.getByTestId('hideBlog').click()
-        await like(1, page)
-        await page.getByTestId('hideBlog').click()
-        await like(2, page)
-        await page.getByTestId('hideBlog').click()
 
-        await expect(page.locator('div.blog').first()).toHaveText(/Blog02 Author of blog/)
-        await expect(page.locator('div.blog').nth(1)).toHaveText(/Blog03 Author of blog/)
-        await expect(page.locator('div.blog').nth(2)).toHaveText(/Blog01 Author of blog/)
+        await likeByName(page, 'Some Blog03')
+        await likeByName(page, 'Some Blog02')
+        await likeByName(page, 'Some Blog02')
 
+        const blogsLocators = page.locator('div.blog >> div')
+        const texts = await blogsLocators.allTextContents()
+        const expectedOrder = [
+            'Some Blog02 Author of this blog',
+            'Some Blog03 Author of this blog',
+            'Some Blog01 Author of this blog'
+        ]
+        expect(texts).toStrictEqual(expectedOrder)
     })
 })
-
-
 
 /* 5.17:
 Tee testi, joka varmistaa, että sovellus näyttää oletusarvoisesti kirjautumislomakkeen.

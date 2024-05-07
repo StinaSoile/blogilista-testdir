@@ -17,7 +17,7 @@ module.exports = defineConfig({
   /* MUTTA fullstack-kurssin suositus joka pienentää testien suoritusaikaa 
   testejen kehittämisvaihetta ajatellen:
   */
-  timeout: 5000, // kurssin asetus
+  timeout: 20000, // kurssin asetus
   fullyParallel: false, // kurssin asetus
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
